@@ -1,0 +1,7 @@
+Put your 3D character here (any name ending in .glb or .gltf, e.g. character.glb).
+The website finds it automatically when it is served by app.py.
+- A model with a "Walk" animation clip plays that clip (forward root motion is removed so it walks on the spot).
+- A rigged model without clips (Mixamo / Ready Player Me / VRM bone names) gets a procedural walk.
+- A static mesh gets a gentle walking bob.
+If the model faces the wrong way, open index.html?modelYaw=180 (degrees) to test a rotation.
+Without a model, the site shows its built-in procedural avatar.
