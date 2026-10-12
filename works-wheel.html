@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Works Wheel | I G.N.K. Sukma Kertha Dinata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a1a14;
+  --fg: #f4faf5;
+  --muted: rgba(244,250,245,.45);
+  --gold: #c9962b;
+  --glass: rgba(14,48,38,.32);
+  --glass-line: rgba(255,255,255,.28);
+  --glass-hi: rgba(255,255,255,.5);
+  --card-shadow: rgba(3,20,15,.45);
+  --serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+*, *::before, *::after { box-sizing: inherit; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Stage ── */
+.stage {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+  user-select: none;
+  cursor: grab;
+  outline: none;
+}
+.stage:active { cursor: grabbing; }
+
+/* ── Background ── */
+.stage-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 120% 80% at 70% 20%, rgba(47,122,98,.25), transparent 70%),
+              radial-gradient(ellipse 80% 60% at 30% 80%, rgba(201,150,43,.12), transparent 60%),
+              var(--bg);
+}
+
+/* ── 3D wheel ── */
+.wheel-perspective {
+  position: absolute; inset: 0; z-index: 1;
+}
+.wheel-origin {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform-style: preserve-3d;
+}
+
+/* ── Card ── */
+.card {
+  position: absolute;
+  backface-visibility: hidden;
+  will-change: transform, opacity;
+  transition: none;
+}
+.card-face {
+  position: relative;
+  width: 100%; height: 100%;
+  overflow: hidden;
+  border-radius: 16px;
+  background: var(--glass);
+  border: 1px solid var(--glass-line);
+  box-shadow: 0 18px 40px -18px var(--card-shadow),
+              inset 0 1px 0 var(--glass-hi);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.card img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  pointer-events: none;
+}
+.card-action {
+  position: absolute;
+  right: 12px; bottom: 12px;
+  display: flex; align-items: center; gap: 5px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px; font-weight: 500;
+  background: rgba(10,26,20,.75);
+  border: 1px solid var(--glass-line);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: var(--fg);
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
+}
+.card:hover .card-action { opacity: 1; transform: translateY(0); }
+.card-action svg { width: 10px; height: 10px; }
+
+/* ── Labels ── */
+.ring-label {
+  position: absolute; inset: 0; z-index: 2;
+  display: grid; place-items: center;
+  font-family: var(--serif);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  pointer-events: none;
+  text-shadow: 0 2px 20px rgba(0,0,0,.4);
+}
+.front-title {
+  position: absolute;
+  top: 50%; left: 8%;
+  transform: translateY(-50%);
+  font-family: var(--serif);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--fg);
+  opacity: 0;
+  pointer-events: none;
+  text-shadow: 0 2px 16px rgba(0,0,0,.5);
+  z-index: 2;
+}
+
+/* ── Index list ── */
+.index-list {
+  position: absolute;
+  top: 7.5%; right: 3%;
+  text-align: right;
+  list-style: none;
+  line-height: 1.85;
+  z-index: 3;
+}
+.index-list button {
+  background: none; border: none; cursor: pointer;
+  font-family: var(--sans);
+  color: var(--muted);
+  transition: color .2s;
+  padding: 2px 0;
+}
+.index-list button:hover { color: var(--fg); }
+.index-list button.active { color: var(--fg); font-weight: 600; }
+.index-list button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; border-radius: 4px; }
+
+/* ── Hint ── */
+.scroll-hint {
+  position: absolute;
+  bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  left: 50%; transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  font-size: 12px; color: var(--muted);
+  pointer-events: none; z-index: 2;
+}
+.scroll-hint .mouse {
+  width: 20px; height: 32px;
+  border: 1.5px solid var(--glass-line);
+  border-radius: 12px;
+  position: relative;
+}
+.scroll-hint .mouse::after {
+  content: '';
+  position: absolute; left: 50%; top: 6px;
+  width: 3px; height: 7px; border-radius: 2px;
+  background: #fff; transform: translateX(-50%);
+  animation: dotpulse 1.8s infinite;
+}
+@keyframes dotpulse {
+  0% { opacity: 1; transform: translate(-50%,0); }
+  70% { opacity: 0; transform: translate(-50%,10px); }
+  100% { opacity: 0; }
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage" tabindex="0" role="listbox" aria-label="Works '26">
+  <div class="stage-bg"></div>
+  <div class="wheel-perspective" id="perspective">
+    <div class="wheel-origin" id="wheel"></div>
+  </div>
+  <div class="ring-label" id="ringLabel">Works '26</div>
+  <div class="front-title" id="frontTitle"></div>
+  <ol class="index-list" id="indexList"></ol>
+  <div class="scroll-hint" id="hint">
+    <div class="mouse"></div>
+    Scroll or drag to explore
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  // ═══════════════════════════════════════════
+  //  DATA — replace with your own projects
+  // ═══════════════════════════════════════════
+  var WORKS = [
+    {
+      title: 'Hard Rock Hotel Bali',
+      image: 'static/hardrock.jpg',
+      href: '#hardrock'
+    },
+    {
+      title: 'Site Visit Amora Kintamani',
+      image: 'static/sitevisit.jpg',
+      href: '#sitevisit'
+    },
+    {
+      title: 'PRAVA Marketplace',
+      image: 'static/p_prava.jpg',
+      href: '#prava'
+    },
+    {
+      title: 'Four Seasons Resort Bali',
+      image: 'static/p_four.jpg',
+      href: '#fourseasons'
+    },
+    {
+      title: 'Mochi Cookies',
+      image: 'static/p_mochi.jpg',
+      href: '#mochi'
+    },
+    {
+      title: 'The Samaya Restaurant',
+      image: 'static/p_samaya.jpg',
+      href: '#samaya'
+    },
+    {
+      title: 'Exploring Japan',
+      image: 'static/p_japan.jpg',
+      href: '#japan'
+    },
+    {
+      title: 'ECC Japan Program',
+      image: 'static/ecc.jpg',
+      href: '#ecc'
+    },
+    {
+      title: 'AI Fundamentals',
+      image: 'static/dicoding.jpg',
+      href: '#dicoding'
+    }
+  ];
+
+  var LABEL = "Works '26";
+  var ACTION = 'View';
+
+  // ═══════════════════════════════════════════
+  //  GEOMETRY (matches the React version)
+  // ═══════════════════════════════════════════
+  var CARD_H = 0.38;
+  var CARD_MAX_W = 0.34;
+  var CARD_RATIO = 1.45;
+  var STEP = 40;
+  var DRUM = 2.22;
+  var LENS = 2.7;
+  var RING_R = 1.14;
+  var BOW = 1.82;
+  var TITLE_SIZE = 0.124;
+  var INDEX_SIZE = 0.04;
+  var CULL = 1.6;
+  var WHEEL_UNITS = 900;
+  var DRAG_UNITS = 420;
+  var SETTLE_MS = 140;
+  var EASE = 0.12;
+
+  var count = WORKS.length;
+  var last = Math.max(count - 1, 0);
+
+  function clamp(v, lo, hi) { return Math.min(hi, Math.max(lo, v)); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function rad(deg) { return deg * Math.PI / 180; }
+  function bowAt(drumDeg, bow) { return -bow * (1 - Math.cos(rad(drumDeg))); }
+
+  function place(ringDeg, drumDeg, ringR, drumR, bow, m) {
+    return 'translateX(' + (m * bowAt(drumDeg, bow)) + 'px)'
+      + ' rotateZ(' + ((1 - m) * ringDeg) + 'deg) translateY(' + (-(1 - m) * ringR) + 'px)'
+      + ' rotateX(' + (m * drumDeg) + 'deg) translateZ(' + (m * drumR) + 'px)';
+  }
+
+  // ═══════════════════════════════════════════
+  //  DOM
+  // ═══════════════════════════════════════════
+  var stage = document.getElementById('stage');
+  var perspective = document.getElementById('perspective');
+  var wheel = document.getElementById('wheel');
+  var ringLabel = document.getElementById('ringLabel');
+  var frontTitle = document.getElementById('frontTitle');
+  var indexList = document.getElementById('indexList');
+  var hint = document.getElementById('hint');
+
+  var cards = [];
+  var faces = [];
+
+  WORKS.forEach(function (item, i) {
+    // Card
+    var el = document.createElement(item.href ? 'a' : 'div');
+    el.id = 'works-wheel-' + i;
+    el.setAttribute('role', 'option');
+    el.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
+    if (item.href) el.href = item.href;
+    el.className = 'card';
+
+    // Face
+    var face = document.createElement('span');
+    face.className = 'card-face';
+
+    var img = document.createElement('img');
+    img.src = item.image;
+    img.alt = item.title;
+    img.draggable = false;
+    face.appendChild(img);
+
+    if (ACTION && item.href) {
+      var act = document.createElement('span');
+      act.className = 'card-action';
+      act.innerHTML = '<svg viewBox="0 0 12 12"><path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>' + ACTION;
+      face.appendChild(act);
+    }
+
+    el.appendChild(face);
+    wheel.appendChild(el);
+    cards.push(el);
+    faces.push(face);
+
+    // Index
+    var li = document.createElement('li');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = item.title;
+    btn.addEventListener('click', function () { goTo(i + 1); });
+    li.appendChild(btn);
+    indexList.appendChild(li);
+  });
+
+  var indexBtns = indexList.querySelectorAll('button');
+
+  // ═══════════════════════════════════════════
+  //  METRICS
+  // ═══════════════════════════════════════════
+  var metrics = {};
+  function measure() {
+    var w = stage.clientWidth;
+    var h = stage.clientHeight;
+    var cardW = Math.min(h * CARD_H * CARD_RATIO, w * CARD_MAX_W);
+    var cardH = cardW / CARD_RATIO;
+    var ringR = cardH * RING_R;
+    var ringScale = count ? clamp(((2 * Math.PI * ringR / count) * 0.82) / (cardW || 1), 0.16, 1) : 1;
+
+    metrics = {
+      w: w, h: h,
+      cardW: cardW, cardH: cardH,
+      ringR: ringR, ringScale: ringScale,
+      drumR: cardH * DRUM,
+      bow: cardH * BOW,
+      depth: cardH * LENS,
+      titleSize: cardH * TITLE_SIZE,
+      indexSize: cardH * INDEX_SIZE
+    };
+
+    perspective.style.perspective = metrics.depth + 'px';
+    ringLabel.style.fontSize = metrics.titleSize + 'px';
+    frontTitle.style.fontSize = metrics.titleSize + 'px';
+    indexList.style.fontSize = metrics.indexSize + 'px';
+
+    cards.forEach(function (el) {
+      el.style.width = metrics.cardW + 'px';
+      el.style.height = metrics.cardH + 'px';
+      el.style.marginLeft = (-metrics.cardW / 2) + 'px';
+      el.style.marginTop = (-metrics.cardH / 2) + 'px';
+    });
+  }
+  measure();
+  window.addEventListener('resize', measure);
+
+  // ═══════════════════════════════════════════
+  //  STATE
+  // ═══════════════════════════════════════════
+  var turn = 0;
+  var target = 0;
+  var active = 0;
+  var settling = 0;
+  var dragY = null;
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  function goTo(next) {
+    target = clamp(next, 0, last + 1);
+  }
+
+  // ═══════════════════════════════════════════
+  //  RENDER LOOP
+  // ═══════════════════════════════════════════
+  function draw() {
+    requestAnimationFrame(draw);
+    var gap = target - turn;
+    if (Math.abs(gap) < 0.0005) turn = target;
+    else turn += gap * (reduced ? 1 : EASE);
+
+    var t = turn;
+    var m = clamp(t, 0, 1);
+    var pos = Math.max(0, t - 1);
+
+    wheel.style.transform = 'translateZ(' + (-m * metrics.drumR) + 'px)';
+
+    for (var i = 0; i < count; i++) {
+      var d = i - pos;
+      var drumDeg = d * STEP;
+      var card = cards[i];
+      card.style.transform = place(d * (360 / count), drumDeg, metrics.ringR, metrics.drumR, metrics.bow, m);
+      card.style.opacity = (m > 0.5 && Math.abs(d) > CULL) ? '0' : '1';
+      card.style.zIndex = String(Math.round(100 - Math.abs(d) * 2));
+      faces[i].style.transform = 'scale(' + lerp(metrics.ringScale, 1, m) + ')';
+    }
+
+    ringLabel.style.opacity = String(1 - m);
+    frontTitle.style.opacity = String(m);
+
+    var near = clamp(Math.round(pos), 0, last);
+    if (near !== active) {
+      active = near;
+      frontTitle.textContent = WORKS[active] ? WORKS[active].title : '';
+      stage.setAttribute('aria-activedescendant', 'works-wheel-' + active);
+      for (var j = 0; j < count; j++) {
+        cards[j].setAttribute('aria-selected', j === active ? 'true' : 'false');
+        indexBtns[j].className = j === active ? 'active' : '';
+      }
+    }
+
+    // fade hint once user starts scrolling
+    if (hint && t > 0.15) { hint.style.opacity = String(Math.max(0, 1 - (t - 0.15) * 3)); }
+  }
+  requestAnimationFrame(draw);
+
+  // ═══════════════════════════════════════════
+  //  INPUT: wheel, drag, keyboard
+  // ═══════════════════════════════════════════
+  stage.addEventListener('wheel', function (e) {
+    var next = target + e.deltaY / WHEEL_UNITS;
+    if (next > 0 && next < last + 1) e.preventDefault();
+    goTo(next);
+    clearTimeout(settling);
+    settling = setTimeout(function () { goTo(Math.round(target)); }, SETTLE_MS);
+  }, { passive: false });
+
+  stage.addEventListener('pointerdown', function (e) {
+    dragY = e.clientY;
+    stage.setPointerCapture(e.pointerId);
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (dragY === null) return;
+    goTo(target + (dragY - e.clientY) / DRAG_UNITS);
+    dragY = e.clientY;
+  });
+  stage.addEventListener('pointerup', function () {
+    dragY = null;
+    if (target > 1) goTo(Math.round(target));
+  });
+  stage.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowDown') { goTo(Math.round(target) + 1); e.preventDefault(); }
+    else if (e.key === 'ArrowUp') { goTo(Math.round(target) - 1); e.preventDefault(); }
+  });
+
+  // Touch
+  var touchY = null;
+  stage.addEventListener('touchstart', function (e) { touchY = e.touches[0].clientY; }, { passive: true });
+  stage.addEventListener('touchmove', function (e) {
+    if (touchY === null) return;
+    var y = e.touches[0].clientY;
+    var next = target + (touchY - y) / DRAG_UNITS;
+    if (next > 0 && next < last + 1) e.preventDefault();
+    goTo(next);
+    touchY = y;
+  }, { passive: false });
+  stage.addEventListener('touchend', function () {
+    touchY = null;
+    if (target > 1) goTo(Math.round(target));
+  });
+})();
+</script>
+</body>
+</html>

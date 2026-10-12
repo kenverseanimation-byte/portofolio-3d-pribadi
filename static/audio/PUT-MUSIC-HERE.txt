@@ -1,0 +1,2 @@
+Optional: put a background music file here named bgm.mp3 (or bgm.ogg / bgm.m4a).
+If present, it replaces the built-in Web Audio soundtrack (it loops, and its tone opens up per section).
